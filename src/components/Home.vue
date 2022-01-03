@@ -4,39 +4,77 @@ import { ref } from 'vue';
 import library from "../assets/library";
 import { initSpeech } from '../utils/speech';
 import useLibrary from '../composables/useLibrary';
+import { SpeechConfig } from '../types/speech';
 
 import Words from './Words.vue';
+
+type Task = [SpeechConfig, string]
+
+const taskList = ref<Task[]>([]);
 
 const { initLibrary, setRandomWords, words } = useLibrary(library);
 initLibrary();
 setRandomWords(30);
 
 async function read() {
-  for (let i = 0; i < words.value.length; i++) {
-    const word = words.value[i];
-    await readWithSpeech({
+  clearTask();
+
+  words.value.forEach(word => {
+    addTask({
       lang: 'ja-JP',
       voice: 'Kyoko',
-    }, word.kata);
-    console.log(1)
-    await readWithSpeech({
+    }, word.hira);
+    addTask({
       lang: 'zh-CN',
       voice: 'Ting-Ting',
     }, word.zh);
+  });
+
+  startTask(async ([config, text]: [SpeechConfig, string]) => {
+    await readWithSpeech(config, text);
+  });
+}
+
+function addTask(config: SpeechConfig, text: string) {
+  taskList.value.push([config, text]);
+}
+
+function clearTask() {
+  taskList.value = [];
+}
+
+async function startTask(callback: (task: Task) => Promise<void>) {
+  const task = taskList.value.shift();
+
+  if (task) {
+    await callback(task);
+    startTask(callback);
   }
 }
 
-async function readWithSpeech(config: any, text: string) {
-  const speech = await initSpeech(config);
-  await speech.speak({
-    text,
-    queue: true,
-    listeners: {
-      onend: () => {},
-    }
+function sleep(timeout: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, timeout);
   })
 }
 
+async function readWithSpeech(config: SpeechConfig, text: string) {
+  const speech = await initSpeech(config);
+  return new Promise(resolve => {
+    speech.speak({
+      text,
+      queue: true,
+      listeners: {
+        onend: async () => {
+          await sleep(1000);
+          resolve(1);
+        },
+      }
+    }).catch((e: unknown) => {
+      console.log(e)
+    });
+  });
+}
 </script>
 
 <template>
