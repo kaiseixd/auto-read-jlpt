@@ -19,6 +19,6 @@ defineProps<{ data: Word[] }>();
 <style scoped>
 table {
   margin: 0 auto;
-  width: 80vw;
+  max-width: 800px;
 }
 </style>
