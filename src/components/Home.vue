@@ -26,7 +26,7 @@ async function read() {
   }
 }
 
-async function readWithSpeech(config, text) {
+async function readWithSpeech(config: any, text: string) {
   const speech = await initSpeech(config);
   await speech.speak({
     text,

@@ -8,7 +8,7 @@ export default function useLibrary(library: string) {
 
   function initLibrary() {
     let lib = JSON.parse(library);
-    lib = lib.map(([index, zh, kata, hira, grade]) => ({
+    lib = lib.map(([index, zh, kata, hira, grade]: string[]) => ({
       index, zh, kata, hira, grade
     }))
     wordsLib.value = lib;
