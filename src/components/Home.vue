@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { NButton } from 'naive-ui'
 
 import library from "../assets/library";
 import { initSpeech } from '../utils/speech';
 import useLibrary from '../composables/useLibrary';
 import { SpeechConfig } from '../types/speech';
+import { Word } from '../types/words';
 
 import Words from './Words.vue';
 
-type Task = [SpeechConfig, string]
+type Task = [SpeechConfig, Word, string]
 
 const taskList = ref<Task[]>([]);
+const currentWord = ref('');
 
 const { initLibrary, setRandomWords, words } = useLibrary(library);
 initLibrary();
@@ -22,21 +25,21 @@ async function read() {
   words.value.forEach(word => {
     addTask({
       lang: 'ja-JP',
-      voice: 'Kyoko',
-    }, word.hira);
+      volume: 1,
+    }, word, word.hira);
     addTask({
       lang: 'zh-CN',
-      voice: 'Ting-Ting',
-    }, word.zh);
+      volume: 0.5,
+    }, word, word.zh);
   });
 
-  startTask(async ([config, text]: [SpeechConfig, string]) => {
-    await readWithSpeech(config, text);
+  startTask(async ([config, word, text]: [SpeechConfig, Word, string]) => {
+    await readWithSpeech(config, word, text);
   });
 }
 
-function addTask(config: SpeechConfig, text: string) {
-  taskList.value.push([config, text]);
+function addTask(config: SpeechConfig, word: Word, text: string) {
+  taskList.value.push([config, word, text]);
 }
 
 function clearTask() {
@@ -58,7 +61,7 @@ function sleep(timeout: number) {
   })
 }
 
-async function readWithSpeech(config: SpeechConfig, text: string) {
+async function readWithSpeech(config: SpeechConfig, word: Word, text: string) {
   const speech = await initSpeech(config);
   return new Promise(resolve => {
     speech.speak({
@@ -73,18 +76,26 @@ async function readWithSpeech(config: SpeechConfig, text: string) {
     }).catch((e: unknown) => {
       console.log(e)
     });
+    currentWord.value = word.index;
   });
 }
 </script>
 
 <template>
-  <div><button @click="setRandomWords(30)">udpate words</button></div>
-  <div><button @click="read">read it</button></div>
-  <Words :data="words" />
+  <div class="home-button-wrap">
+    <NButton circle color="#8a2be2" @click="setRandomWords(30)">next words</NButton>
+    <NButton circle color="#ff69b4" @click="read">read it</NButton>
+  </div>
+  <Words :data="words" :current="currentWord" />
 </template>
 
 <style scoped>
-button {
+.home-button-wrap {
+  margin-bottom: 12px;
+}
+
+.home-button-wrap button {
   width: 100px;
+  margin: 0 12px;
 }
 </style>

@@ -1,4 +1,5 @@
 export interface SpeechConfig {
-  lang: string;
-  voice: string;
+  lang?: string;
+  voice?: string;
+  volume?: number;
 }
